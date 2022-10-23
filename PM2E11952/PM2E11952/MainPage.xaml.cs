@@ -13,43 +13,50 @@ using Plugin.Media;
 using Xamarin.Forms.Xaml;
 using System.IO;
 
+using PM2E11952.Views;
+using PM2E11952.Models;
+using PM2E11952.Controller;
+
 namespace PM2E11952
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
     public partial class MainPage : ContentPage
     {
-        string base64ball = "";
         public MainPage()
         {
             InitializeComponent();
             GetLocation();
         }
+
+        byte[] imageToSave;
         private async void btncargarimg_Clicked(object sender, EventArgs e)
         {
-            var tomarfoto = await CrossMedia.Current.TakePhotoAsync(new Plugin.Media.Abstractions.StoreCameraMediaOptions
+            try
             {
-                Directory = "miApp",
-                Name = "Image.jpg"
 
-            });
+                var takepic = await CrossMedia.Current.TakePhotoAsync(new Plugin.Media.Abstractions.StoreCameraMediaOptions
+                {
+                    Directory = "PhotoApp",
+                    Name = DateTime.Now.ToString() + "_foto.jpg",
+                    SaveToAlbum = true
+                });
 
-            if (tomarfoto != null)
-            {
-                imagen.Source = ImageSource.FromStream(() => { return tomarfoto.GetStream(); });
+                if (takepic != null)
+                {
+                    imageToSave = null;
+                    MemoryStream memoryStream = new MemoryStream();
+
+                    takepic.GetStream().CopyTo(memoryStream);
+                    imageToSave = memoryStream.ToArray();
+
+                    img.Source = ImageSource.FromStream(() => { return takepic.GetStream(); });
+                }
+                txtdescripcion.Focus();
             }
-
-            Byte[] imagenByte = null;
-
-            using (var stream = new MemoryStream())
+            catch (Exception ex)
             {
-                tomarfoto.GetStream().CopyTo(stream);
-                tomarfoto.Dispose();
-                imagenByte = stream.ToArray();
-
-                base64ball = Convert.ToBase64String(imagenByte);
-
+                await DisplayAlert("Error", "No se pudo guardar la fotografía", "Hecho");
             }
-
         }
 
         public async void GetLocation()
@@ -60,7 +67,7 @@ namespace PM2E11952
 
                 if (location == null)
                 {
-                    await DisplayAlert("Error", "Active el GPS", "Hecho");
+                    await DisplayAlert("Error", "GPS desactivado", "Hecho");
                     txtlatitud.Text = "00.0";
                     txtlongitud.Text = "00.0";
                 }
@@ -72,22 +79,23 @@ namespace PM2E11952
                     txtlongitud.Text = location.Longitude.ToString();
                 }
             }
-            catch (FeatureNotSupportedException)
+            catch (FeatureNotSupportedException fnsEx)
             {
-                // Handle not supported on device exception
+                await DisplayAlert("Aviso", "GPS no soportado" + fnsEx, "Hecho");
             }
             catch (FeatureNotEnabledException)
             {
+                await DisplayAlert("Aviso", "GPS desactivado, activelo y vuelva a ingresar", "Hecho");
+                System.Diagnostics.Process.GetCurrentProcess().Kill();
 
-                // Handle not enabled on device exception
             }
-            catch (PermissionException)
+            catch (PermissionException pEx)
             {
-                // Handle permission exception
+                await DisplayAlert("Aviso", "Conceda los permiso de uso de GPS" + pEx, "Hecho");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Unable to get location
+                await DisplayAlert("Aviso", "Ubicacion no detectada" + ex, "Hecho");
             }
         }
 
@@ -96,36 +104,42 @@ namespace PM2E11952
             await Navigation.PushAsync(new Views.ubicacionesPage());
         }
 
+        private async void btn03_Clicked(object sender, EventArgs e)
+        {
+            System.Diagnostics.Process.GetCurrentProcess().Kill();
+        }
+
         private async void btnguardar_Clicked(object sender, EventArgs e)
         {
-            try
+
+            if (imageToSave == null)
             {
-                var ubicaciones = new Models.Ubicaciones
-                {
-                    latitud = Convert.ToDouble(this.txtlatitud.Text),
-                    longitud = Convert.ToDouble(this.txtlongitud.Text),
-                    descripcion = this.txtdescripcion.Text,
-                    base64 = base64ball
+                await DisplayAlert("Datos incompletos", "Ingrese imagen", "Hecho");
+            }
+            else if (txtdescripcion.Text == null)
+            {
+                await DisplayAlert("Datos incompletos", "Ingrese descripcion", "Hecho");
+            }
+            else
+            {
+                var Ubicaciones = new Ubicaciones { imagen = imageToSave, latitud = Convert.ToDouble(this.txtlatitud.Text), longitud = Convert.ToDouble(this.txtlongitud.Text), descripcion = txtdescripcion.Text };
+                var resultado = await App.Basedatos02.GrabarUbicacion(Ubicaciones);
 
-                };
-
-                var resultado = await App.Basedatos02.GrabarUbicacion(ubicaciones);
-
-
-                if (resultado == 1)
+                if (resultado != 0)
                 {
                     await DisplayAlert("Operación finalizada", "Datos guardados", "Hecho");
+                    txtdescripcion.Text = "";
+                    img.Source = "anadir.png";
+                    imageToSave = null;
+
                 }
                 else
                 {
                     await DisplayAlert("Operación finalizada", "Error al guardar", "Hecho");
-
                 }
-            }
-            catch (Exception ex)
-            {
-                await DisplayAlert("Operacion finalizada", ex.Message.ToString(), "OK");
 
+
+                await Navigation.PopAsync();
             }
         }
     }

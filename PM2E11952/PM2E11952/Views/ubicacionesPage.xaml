@@ -1,42 +1,47 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="PM2E11952.Views.ubicacionesPage"
-             BackgroundColor="White">
+﻿<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:Convertidor="clr-namespace:PM2E11952.Converters"
+             x:Class="PM2E11952.Views.ubicacionesPage">
+
+
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Convertidor:ByteArrayToImage x:Key="ByteToImage" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+
 
     <ContentPage.Content>
-        <StackLayout>
-            <Entry IsVisible="false" x:Name="txtcodigo" ></Entry>
-            <Entry IsVisible="false" x:Name="txtlatitud" ></Entry>
-            <Entry IsVisible="false" x:Name="txtlongitud" ></Entry>
-            <Entry IsVisible="false" x:Name="txtdescripcion" ></Entry>
-            <Entry IsVisible="false" x:Name="txtdcorta" ></Entry>
+        <StackLayout Background="#f2f2f2">
+            <ScrollView>
+                <ListView x:Name="listasitios" ItemTapped="listasistios_ItemTapped">
+
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+
+                            <ViewCell >
+                                <Grid  >
+
+                                    <Image Source="{Binding imagen, Converter={StaticResource ByteToImage}}" Grid.Column="0" HorizontalOptions="Center" Margin="5"/>
+                                    <Label Grid.Column="1" HorizontalOptions="Center" Text="{Binding descripcion}" TextColor="Navy" FontSize="14" Margin="5"></Label>
+                                </Grid>
+
+                            </ViewCell>
+                        </DataTemplate>
+
+                    </ListView.ItemTemplate>
+                </ListView>
+            </ScrollView>
+
+            <RelativeLayout HorizontalOptions="Center" Margin="5">
+                <Grid>
+                    <Button Text="Eliminar" x:Name="btneliminarcas" WidthRequest="100" Grid.Column="0" Clicked="tlbeliminar_Clicked" BackgroundColor="RoyalBlue" Margin="5" FontSize="12"/>
+                    <Button Text="Mapa" x:Name="btnvermapa" WidthRequest="100" Grid.Column="1" Clicked="tlbver_Clicked" BackgroundColor="RoyalBlue" Margin="5" FontSize="12"/>
+                    <Button Text="Compartir" x:Name="btncompartir" WidthRequest="100" Grid.Column="2" Clicked="tlbcompartir_Clicked" BackgroundColor="RoyalBlue" Margin="5" FontSize="12"/>
+                </Grid>
+            </RelativeLayout>
+
         </StackLayout>
     </ContentPage.Content>
-
-
-    <ListView x:Name="lstUbicaciones"  ItemTapped="lstUbicaciones_ItemTapped"  >
-        <ListView.ItemTemplate >
-            <DataTemplate>
-                <ViewCell >
-
-                    <Grid>
-                        <Label Text="{Binding codigo}" Grid.Row="0" Grid.Column="0" TextColor="Navy" FontSize="14" Margin="5"/>
-                        <Label Text="{Binding latitud}" Grid.Row="0" Grid.Column="1" TextColor="Navy" FontSize="14" Margin="5"/>
-                        <Label Text="{Binding longitud}" Grid.Row="0" Grid.Column="2" TextColor="Navy" FontSize="14" Margin="5"/>
-                        <Label Text="{Binding descripcion}" Grid.Row="0" Grid.Column="3" TextColor="Navy" FontSize="14" Margin="5"/>
-                    </Grid>
-                </ViewCell>
-            </DataTemplate>
-        </ListView.ItemTemplate>
-    </ListView>
-
-    <ContentPage.ToolbarItems>
-
-        <ToolbarItem Text="Eliminar" Clicked="tlbeliminar_Clicked" x:Name="tlbeliminar"></ToolbarItem>
-        <ToolbarItem Text="Compartir" Clicked="tlbcompartir_Clicked" x:Name="tlbcompartir" ></ToolbarItem>
-        <ToolbarItem Text="Mapa" Clicked="tlbver_Clicked" x:Name="tlbver" ></ToolbarItem>
-
-    </ContentPage.ToolbarItems>
-
 </ContentPage>

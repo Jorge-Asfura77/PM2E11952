@@ -3,5 +3,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:maps="clr-namespace:Xamarin.Forms.Maps;assembly=Xamarin.Forms.Maps"
              x:Class="PM2E11952.Views.MapPage">
-    <maps:Map IsShowingUser="True" x:Name="mapa"/>
+    <ContentPage.Content>
+        <StackLayout Background="#f2f2f2">
+            <maps:Map HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" x:Name="mapa" IsShowingUser="True"/>
+            <Button Text="Compartir" x:Name="btnCompartir"   Grid.Column="0" Clicked="btnCompartir_Clicked" BackgroundColor="RoyalBlue" Margin="5" />
+        </StackLayout>
+
+    </ContentPage.Content>
 </ContentPage>

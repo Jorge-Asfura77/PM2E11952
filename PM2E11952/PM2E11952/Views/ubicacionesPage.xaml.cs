@@ -3,81 +3,104 @@ using Xamarin.Essentials;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 using Plugin.Geolocator;
-
-
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using PM2E11952.Views;
+using PM2E11952.Models;
+using PM2E11952.Converters;
+using System.IO;
 
 namespace PM2E11952.Views
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
     public partial class ubicacionesPage : ContentPage
     {
+        
+
         public ubicacionesPage()
         {
             InitializeComponent();
            
         }
 
+        private Ubicaciones sitio;
+
         protected async override void OnAppearing()
         {
             base.OnAppearing();
 
-            var listaubicaciones = await App.Basedatos02.ObtenerListaUbicaciones();
-            lstUbicaciones.ItemsSource = listaubicaciones;
-            
+            listasitios.ItemsSource = await App.Basedatos02.ObtenerListaUbicaciones();
+        
         }
 
         private async void tlbeliminar_Clicked(object sender, EventArgs e)
         
-        {
-
-
-            var ubicacion = new Models.Ubicaciones
+        {try
             {
-                codigo = Convert.ToInt32(this.txtcodigo.Text),
-                latitud = Convert.ToDouble(this.txtlatitud.Text),
-                longitud = Convert.ToDouble(this.txtlongitud.Text),
-                descripcion = this.txtdescripcion.Text,
-            };
+                var eliminar = await App.Basedatos02.EliminarUbicacion(sitio);
 
-            if (await App.Basedatos02.EliminarUbicacion(ubicacion) != 0)
-                await DisplayAlert("Operación finalizada", "Datos eliminados", "Hecho");
-            else
-                await DisplayAlert("Operación finalizada", "Error al eliminar datos", "Hecho");
 
-        }
+                if (eliminar != 0)
+                {
+                    await DisplayAlert("Aviso", "Sitio eliminado", "Hecho");
+                    listasitios.ItemsSource = await App.Basedatos02.ObtenerListaUbicaciones();
 
-        public async void lstUbicaciones_ItemTapped(object sender, ItemTappedEventArgs e)
-        {
-            Models.Ubicaciones item = (Models.Ubicaciones)e.Item;
-
-            this.txtcodigo.Text = Convert.ToString( item.codigo);
-            this.txtlatitud.Text = Convert.ToString(item.latitud);
-            this.txtlongitud.Text = Convert.ToString(item.longitud);
-            this.txtdescripcion.Text = Convert.ToString(item.descripcion);
+                }
+                else
+                {
+                    await DisplayAlert("Aviso", "Error", "Hecho");
+                }
+            }
+            catch
+            {
+                await DisplayAlert("Aviso", "Seleccione sitio a eliminar", "Hecho");
+            }
         }
 
         private async void tlbver_Clicked(object sender, EventArgs args1)
         {
-            double lati = double.Parse(txtlatitud.Text);
-            double longi = double.Parse(txtlongitud.Text);
+            // El mapa se abrirá en la aplicación Google Maps
+            await Map.OpenAsync(sitio.latitud, sitio.longitud, new MapLaunchOptions
+            {
+                Name = sitio.descripcion,
+                NavigationMode = NavigationMode.None
+            });
 
-            await DisplayAlert(txtlatitud.Text, txtlongitud.Text, "Cancelar");
-
-            //await Map.OpenAsync(lati, longi, new MapLaunchOptions
+            //try
             //{
-            //    Name = "Hola",
-	           // NavigationMode = NavigationMode.None
-            //});
-            //var page = new Views.MapPage();
-            //await Navigation.PushAsync(page);
-
-            //MapLaunchOptions options = new MapLaunchOptions { Name = "Mi posición actual" };
-            //await Map.OpenAsync(lati, longi, options);
+            //    await Navigation.PushAsync(new MapPage(sitio.latitud, sitio.longitud, sitio.descripcion));
+            //}
+            //catch
+            //{
+            //    await DisplayAlert("Advertencia", "Favor seleccione el sitio donde desea ver en el mapa", "Ok");
+            //}
         }
 
-        private async void tlbcompartir_Clicked(object sender, EventArgs e)
+        private async void tlbcompartir_Clicked(object sender, EventArgs args1)
         {
-            await DisplayAlert("Compartiendo imagen", "Espere...", "Cancelar");
+            var lati = sitio.latitud.ToString();
+            var longi = sitio.longitud.ToString();
+            
+            
+                await Share.RequestAsync(
+                   new ShareTextRequest
+                   {
+                       Title = "Ubicacion",
+                       Text = "Te comparto mi ubicación",
+                       Uri = "https://maps.google.com/?q="
+                   }
+                    );
+            
+            
+        }
+
+
+        private void listasistios_ItemTapped(object sender, ItemTappedEventArgs e)
+        {
+            sitio = (Ubicaciones)e.Item;
+
         }
     }
     
